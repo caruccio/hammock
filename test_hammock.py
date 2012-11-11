@@ -72,6 +72,24 @@ class TestCaseWrest(unittest.TestCase):
             self.assertIsNotNone(resp.json.get('path', None))
             self.assertEqual(resp.json.get('path'), PATH)
 
+    def test_urls_ignore(self):
+        client = Hammock(BASE_URL, ignore=(False, None))
+        combs = [
+            client.sample(False).path.to(None).resource,
+            client('sample', False).path('to', None).resource,
+            client('sample', False, 'path', 'to', None, 'resource'),
+            client('sample')(False)('path')('to')(None)('resource'),
+            client.sample(False, 'path')('to', None, 'resource'),
+            client('sample', False, 'path',).to(None).resource
+        ]
+
+        for comb in combs:
+            self.assertEqual(str(comb), URL)
+            resp = comb.GET()
+            self.assertIsNotNone(resp.json)
+            self.assertIsNotNone(resp.json.get('path', None))
+            self.assertEqual(resp.json.get('path'), PATH)
+
     def test_append_slash_option(self):
         client = Hammock(BASE_URL, append_slash=True)
         resp = client.sample.path.to.resource.GET()

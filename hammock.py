@@ -7,7 +7,7 @@ class Hammock(object):
 
     HTTP_METHODS = ['get', 'options', 'head', 'post', 'put', 'patch', 'delete']
 
-    def __init__(self, name=None, parent=None, append_slash=False, **kwargs):
+    def __init__(self, name=None, parent=None, append_slash=False, ignore=(), **kwargs):
         """Constructor
 
         Arguments:
@@ -19,6 +19,7 @@ class Hammock(object):
         self._name = name
         self._parent = parent
         self._append_slash = append_slash
+        self._ignore = ignore
         self._session = kwargs and requests.session(**kwargs) or requests
 
     def _spawn(self, name):
@@ -56,7 +57,7 @@ class Hammock(object):
             *args -- array of string representable objects
         """
         chain = self
-        for arg in args:
+        for arg in filter(lambda x: x not in self._ignore, args):
             chain = chain._spawn(str(arg))
         return chain
 
