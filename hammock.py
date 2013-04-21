@@ -19,7 +19,25 @@ class Hammock(object):
         self._name = name
         self._parent = parent
         self._append_slash = append_slash
-        self._session = kwargs and requests.session(**kwargs) or requests
+        self._session = requests
+        if kwargs:
+            # update requests.session with whatever is passed on kwargs
+            self._session = requests.session()
+            for attr, value in kwargs.items():
+                try:
+                    _attr = getattr(self._session, attr)
+                    if hasattr(_attr, '__setitem__'):
+                        # user supplied a mapping object
+                        if not hasattr(value, '__setitem__'):
+                            raise ValueError(attr)
+                        def _set(k, v): _attr[k] = v
+                        map(lambda (k,v): _set(k,v), value.iteritems())
+                    else:
+                        setattr(self._session, attr, value)
+                except AttributeError:
+                    setattr(self._session, attr, value)
+
+
 
     def _spawn(self, name):
         """Returns a shallow copy of current `Hammock` instance as nested child

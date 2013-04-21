@@ -15,6 +15,28 @@ class TestCaseWrest(unittest.TestCase):
     URL = BASE_URL + PATH
 
     @httprettified
+    def test_auth(self):
+        session_headers = {
+            'headers': {'Accept': 'money/bitcoin'},
+            'cookies': {'flavor': 'vanilla'},
+            'auth': ('user', 'pass'),
+            'timeout': 10,
+            'params': {'color':'blue'},
+        }
+        client = Hammock(self.BASE_URL, **session_headers)
+        HTTPretty.register_uri(HTTPretty.GET, self.URL)
+        client.GET('sample', 'path', 'to', 'resource')
+        import copy, requests
+        hdrs = copy.copy(requests.session().headers)
+        hdrs['Accept'] = 'money/bitcoin'
+        self.assertEqual(client._session.headers, hdrs)
+        self.assertEqual(client._session.cookies, {'flavor': 'vanilla'})
+        self.assertEqual(client._session.auth, ('user', 'pass'))
+        self.assertEqual(client._session.timeout, 10)
+        self.assertEqual(client._session.params, {'color': 'blue'})
+        self.assertRaises(ValueError, Hammock, self.BASE_URL, headers=1)
+
+    @httprettified
     def test_methods(self):
         client = Hammock(self.BASE_URL)
         for method in ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']:
